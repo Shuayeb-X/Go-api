@@ -1,3 +1,5 @@
+//Go api
+
 package main
 
 import (
@@ -45,7 +47,6 @@ func main() {
 		fmt.Println("Error starting the Server", err)
 	}
 }
-
 func init() {
 	prd1 := Product{
 		Id:          1,
