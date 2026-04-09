@@ -27,6 +27,8 @@ func aboutHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func getProducts(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+
 	if r.Method != http.MethodGet {
 		http.Error(w, "Please give me GET request", 400)
 		return
