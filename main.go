@@ -17,66 +17,69 @@ type Product struct {
 var productlist []Product
 
 func getProducts(w http.ResponseWriter, r *http.Request) {
-	handleCors(w)
-	handlepreflightReq(w, r)
-
 	sendData(w, productlist, 200)
 }
 
 func createProduct(w http.ResponseWriter, r *http.Request) {
-	handleCors(w)
-	handlepreflightReq(w, r)
 	var newProduct Product
+
 	decoder := json.NewDecoder(r.Body)
 	err := decoder.Decode(&newProduct)
-
 	if err != nil {
 		http.Error(w, "Give me Valid JSON", 400)
 		return
-
 	}
 
 	newProduct.Id = len(productlist) + 1
 	productlist = append(productlist, newProduct)
 
-	sendData(w, productlist, 201)
+	sendData(w, newProduct, 201)
 }
 
 func handleCors(w http.ResponseWriter) {
 	w.Header().Set("Access-Control-Allow-Origin", "*")
 	w.Header().Set("Content-Type", "application/json")
-	w.Header().Set("Access-Control-Allow-Methods", "GET,POST,DELETE,PATCH")
+	w.Header().Set("Access-Control-Allow-Methods", "GET,POST,DELETE,PATCH,OPTIONS")
 	w.Header().Set("Access-Control-Allow-Headers", "Content-Type")
-}
-
-func handlepreflightReq(w http.ResponseWriter, r *http.Request) {
-	if r.Method == http.MethodOptions {
-		w.WriteHeader(200)
-		return
-	}
 }
 
 func sendData(w http.ResponseWriter, data interface{}, statusCode int) {
 	w.WriteHeader(statusCode)
-	encoder := json.NewEncoder(w)
-	encoder.Encode(data)
+	json.NewEncoder(w).Encode(data)
+}
+
+func globalRouter(mux *http.ServeMux) http.HandlerFunc {
+	handlerAllReq := func(w http.ResponseWriter, r *http.Request) {
+		handleCors(w)
+
+		if r.Method == http.MethodOptions {
+			w.WriteHeader(200)
+			return
+		}
+
+		mux.ServeHTTP(w, r)
+	}
+
+	return handlerAllReq
 }
 
 func main() {
 	mux := http.NewServeMux()
 
-	mux.Handle("GET /products", http.HandlerFunc(getProducts))
-	mux.Handle("POST /products", http.HandlerFunc(createProduct))
+	mux.Handle("GET /gproducts", http.HandlerFunc(getProducts))
+	mux.Handle("POST /cproducts", http.HandlerFunc(createProduct))
 
 	fmt.Println("Server running on port :3000")
 
-	err := http.ListenAndServe(":3000", mux)
+	router := globalRouter(mux)
+
+	err := http.ListenAndServe(":3000", router)
 	if err != nil {
 		fmt.Println("Error starting the Server", err)
 	}
 }
 
-// inti function
+// init function
 func init() {
 	prd1 := Product{
 		Id:          1,
