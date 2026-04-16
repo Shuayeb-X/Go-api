@@ -21,3 +21,4 @@ func init() {
 
 	Productlist = append(Productlist, prd1)
 }
+
